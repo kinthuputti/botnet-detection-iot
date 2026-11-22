@@ -1,13 +1,13 @@
 """Hybrid ML-Based Botnet Detection System for IoT Networks  -  Flask application.
 
-Modules (report chapter 5):
-  5.1 Authentication      /registration, /login      (MySQL `users` table)
-  5.2 File management     /upload                    (saves to uploads/, loads with pd.read_csv)
-  5.3 Data processing     data_processing.py         (SimpleImputer, LabelEncoder, train_test_split, KFold)
-  5.4 Model selection     /algo                      (hard-coded accuracy dictionary, no on-the-fly training)
-  5.5 Prediction          /prediction                (17 numeric inputs, Logistic Regression retrained on
+Modules:
+  Authentication      /registration, /login      (MySQL `users` table)
+  File management     /upload                    (saves to uploads/, loads with pd.read_csv)
+  Data processing     data_processing.py         (SimpleImputer, LabelEncoder, train_test_split, KFold)
+  Model selection     /algo                      (hard-coded accuracy dictionary, no on-the-fly training)
+  Prediction          /prediction                (17 numeric inputs, Logistic Regression retrained on
                                                       cleaned_dataset.csv, "Benign" / "Malicious" + advice)
-  5.6 Presentation        templates/ + df.to_html()  (Bootstrap)
+  Presentation        templates/ + df.to_html()  (Bootstrap)
 """
 import os
 import re
@@ -46,7 +46,7 @@ DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 DB_NAME = os.environ.get("DB_NAME", "botnet_db")
 
 # Pre-tested algorithms: name -> accuracy (%) from 5-fold cross-validation on cleaned_dataset.csv.
-# Hard-coded on purpose (report 5.4): /algo only displays these, it never trains. Regenerate them with
+# Hard-coded on purpose: /algo only displays these, it never trains. Regenerate them with
 # `python evaluate_models.py --write` after changing the dataset.
 MODEL_ACCURACY = {
     "Logistic Regression": 98.8,
@@ -126,7 +126,7 @@ def about():
     return render_template("about.html")
 
 
-# ----------------------------------------------------------------------------- 5.1 authentication
+# ----------------------------------------------------------------------------- authentication
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
@@ -199,7 +199,7 @@ def logout():
     return redirect(url_for("home"))
 
 
-# ----------------------------------------------------------------------------- 5.2 file management
+# ----------------------------------------------------------------------------- file management
 def my_files():
     prefix = f"u{session['user_id']}_"
     return sorted((f for f in os.listdir(UPLOAD_FOLDER) if f.startswith(prefix)), reverse=True)
@@ -236,7 +236,7 @@ def upload():
     return render_template("upload.html", files=[(f, shown_name(f)) for f in my_files()])
 
 
-# ----------------------------------------------------------------------------- 5.3 / 5.6 view data
+# ----------------------------------------------------------------------------- view data
 @app.route("/viewdata")
 @login_required
 def viewdata():
@@ -260,7 +260,7 @@ def viewdata():
         clean_table=clean.head(20).round(4).to_html(classes=css, index=False))
 
 
-# ----------------------------------------------------------------------------- 5.4 model selection
+# ----------------------------------------------------------------------------- model selection
 @app.route("/algo", methods=["GET", "POST"])
 @login_required
 def algo():
@@ -272,7 +272,7 @@ def algo():
                            score=MODEL_ACCURACY.get(selected))
 
 
-# ----------------------------------------------------------------------------- 5.5 prediction
+# ----------------------------------------------------------------------------- prediction
 @app.route("/prediction", methods=["GET", "POST"])
 @login_required
 def prediction():

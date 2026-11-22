@@ -1,4 +1,4 @@
-"""Test cases from report chapter 6 (UTC1, UTC2, ITC1, ITC2) plus checks for every module.
+"""Test cases: feature/label extraction, registration and login, upload, algorithm page and prediction.
 
 Needs a running MySQL server (uses a throw-away database `botnet_db_test`).
 Run:  python test_cases.py
@@ -38,16 +38,16 @@ class BotnetApp(unittest.TestCase):
         self.c.post("/registration", data=USER)
         return self.c.post("/login", data=dict(email=USER["email"], password=USER["password"]))
 
-    # --- UTC1: Data set feature / label extraction
-    def test_UTC1_feature_label_extraction(self):
+    # --- Data set feature / label extraction
+    def test_feature_label_extraction(self):
         df = pd.read_csv(botnet.DATASET_PATH)
         X, y = df[FEATURES], df[LABEL]
         self.assertEqual(X.shape[1], 17)
         self.assertEqual(len(X), len(y))
         self.assertEqual(set(y.unique()), {0, 1})
 
-    # --- UTC2: Register / login (details stored in database, login success or fail)
-    def test_UTC2_register_login(self):
+    # --- Register / login (details stored in database, login success or fail)
+    def test_register_login(self):
         r = self.c.post("/registration", data=USER)
         self.assertEqual(r.status_code, 302)
         conn = botnet.get_db(); cur = conn.cursor(dictionary=True)
@@ -105,8 +105,8 @@ class BotnetApp(unittest.TestCase):
         r = self.c.post("/algo", data={"model": "KNN"})
         self.assertIn(str(botnet.MODEL_ACCURACY["KNN"]).encode(), r.data)
 
-    # --- ITC1 / ITC2: prediction
-    def test_ITC1_ITC2_prediction(self):
+    # --- Prediction
+    def test_prediction(self):
         self.register_and_login()
         r = self.c.post("/prediction", data=SAMPLE_BENIGN)
         self.assertIn(b"Benign", r.data)

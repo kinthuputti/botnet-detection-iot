@@ -1,4 +1,4 @@
-"""Data Processing Module (report section 5.3).
+"""Data Processing Module.
 
 Converts raw DataFrames into model-ready form:
   * imputation of missing values            -> SimpleImputer
@@ -55,7 +55,7 @@ def split_data(X, y, test_size=0.2, seed=42):
 
 
 def kfold_accuracy(model, X, y, k=5, seed=42):
-    """Average accuracy over k folds (k-Fold Cross-Validation, report chapter 5)."""
+    """Average accuracy over k folds (k-fold cross-validation)."""
     scores = cross_val_score(model, X, y, cv=KFold(n_splits=k, shuffle=True, random_state=seed),
                              scoring="accuracy")
     return float(np.mean(scores))

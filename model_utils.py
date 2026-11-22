@@ -10,12 +10,12 @@ from sklearn.preprocessing import FunctionTransformer, StandardScaler
 
 def with_scaling(estimator):
     """Traffic features are heavy-tailed (bytes, packet rates), so log-scale then standardise
-    (the 'normalization' step of the report) before the classifier."""
+    (normalization) before the classifier."""
     return make_pipeline(FunctionTransformer(np.log1p), StandardScaler(), estimator)
 
 
 def candidate_models():
-    """The five algorithms compared on the /algo page (report section 5.4)."""
+    """The five algorithms compared on the /algo page."""
     return {
         "Logistic Regression": with_scaling(LogisticRegression(max_iter=500)),
         "Naive Bayes":         with_scaling(GaussianNB()),
@@ -26,5 +26,5 @@ def candidate_models():
 
 
 def logistic_regression():
-    """Model retrained on cleaned_dataset.csv for every /prediction request (report section 5.5)."""
+    """Model retrained on cleaned_dataset.csv for every /prediction request."""
     return with_scaling(LogisticRegression(max_iter=500))

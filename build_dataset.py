@@ -1,7 +1,7 @@
 """Builds cleaned_dataset.csv (used by /prediction) and sample_upload.csv (a raw file to try /upload with).
 
-The report evaluates on UNSW-NB15 / Bot-IoT / CICIoT2023-style IoT flow data. Those datasets are large and
-separately licensed, so this script generates a synthetic stand-in with the same kind of 17 flow features.
+Real IoT botnet traffic datasets are large and separately licensed, so this script generates a synthetic
+stand-in with 17 flow features.
 To use real data instead: map your columns to features.FEATURES, add a 0/1 `label`, and save it as
 cleaned_dataset.csv.
 """

@@ -1,8 +1,7 @@
 """Synthetic IoT flow generator.
 
-The project report evaluates on UNSW-NB15 / Bot-IoT / CICIoT2023 style data. Those datasets are large
-and separately licensed, so this module produces a *synthetic* stand-in with the same 17 columns so the
-whole pipeline runs end-to-end. To use real data, map its columns onto ml.features.FEATURES and save it
+Real IoT botnet traffic datasets are large and separately licensed, so this module produces a *synthetic*
+stand-in with 17 flow-feature columns so the whole pipeline runs end-to-end. To use real data, map its columns onto ml.features.FEATURES and save it
 as data/dataset.csv with a 0/1 `label` column, then run `python train.py`.
 """
 import numpy as np
