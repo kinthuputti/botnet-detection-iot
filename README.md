@@ -49,6 +49,28 @@ little about real-world performance. To use real data, map its columns to the na
 
 Protocol codes follow `LabelEncoder`'s alphabetical order: ICMP = 0, TCP = 1, UDP = 2.
 
+## Live demo (free hosting on Render)
+The live demo stores users in SQLite instead of MySQL (set `DB_BACKEND=sqlite`), because free hosting has no database server. Everything else is identical.
+
+1. Push this project to GitHub.
+2. On [render.com](https://render.com): **New → Web Service**, connect the repository, choose the **Free** instance type, and set:
+   - **Build command:** `pip install -r requirements.txt`
+   - **Start command:** `gunicorn app:app --timeout 120`
+3. Add these environment variables:
+
+   | Key | Value |
+   |---|---|
+   | `DB_BACKEND` | `sqlite` |
+   | `PYTHON_VERSION` | `3.12.7` |
+   | `SECRET_KEY` | any long random string |
+   | `DEMO_EMAIL` | `demo@botnet-demo.com` |
+   | `DEMO_PASSWORD` | `Demo@12345` |
+
+4. Deploy. The demo account above is created automatically at startup.
+
+Free-tier behaviour: the app sleeps after 15 minutes without visits (the first request afterwards takes about a minute), and its
+files, including registered users and uploads, are wiped whenever it restarts. The demo account is recreated each time.
+
 ## Notes
 - Passwords are stored hashed. There is no CSRF protection or HTTPS, so treat this as a local/demo app and set `SECRET_KEY` before any real deployment.
 - `/prediction` retrains Logistic Regression on all of `cleaned_dataset.csv` for each request. Log-scaling and standardisation are applied first.

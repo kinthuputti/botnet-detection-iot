@@ -11,6 +11,7 @@ Modules:
 """
 import os
 import re
+import sqlite3
 import uuid
 from functools import wraps
 
@@ -45,6 +46,10 @@ DB_USER = os.environ.get("DB_USER", "root")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 DB_NAME = os.environ.get("DB_NAME", "botnet_db")
 
+# Free hosting (e.g. Render) has no MySQL server: set DB_BACKEND=sqlite to store users in a local SQLite file instead.
+USE_SQLITE = os.environ.get("DB_BACKEND", "mysql").strip().lower() == "sqlite"
+SQLITE_PATH = os.environ.get("SQLITE_PATH", os.path.join(BASE_DIR, "botnet.db"))
+
 # Pre-tested algorithms: name -> accuracy (%) from 5-fold cross-validation on cleaned_dataset.csv.
 # Hard-coded on purpose: /algo only displays these, it never trains. Regenerate them with
 # `python evaluate_models.py --write` after changing the dataset.
@@ -70,38 +75,90 @@ ADVICE = {
 }
 
 
-# ----------------------------------------------------------------------------- database (MySQL)
+# ----------------------------------------------------------------------------- database
+# Local / XAMPP: MySQL (default).  Hosted demo: DB_BACKEND=sqlite.
 def get_db():
     return mysql.connector.connect(host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD,
                                    database=DB_NAME)
 
 
-def init_db():
-    """Create the database and the users table if they do not exist yet."""
-    conn = mysql.connector.connect(host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD)
-    cur = conn.cursor()
-    cur.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4")
-    cur.execute(f"USE `{DB_NAME}`")
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            username VARCHAR(80)  NOT NULL,
-            email    VARCHAR(120) NOT NULL UNIQUE,
-            phone    VARCHAR(20)  NOT NULL,
-            address  VARCHAR(255) NOT NULL,
-            password VARCHAR(255) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )""")
+USERS_TABLE_MYSQL = """
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        username VARCHAR(80)  NOT NULL,
+        email    VARCHAR(120) NOT NULL UNIQUE,
+        phone    VARCHAR(20)  NOT NULL,
+        address  VARCHAR(255) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )"""
+USERS_TABLE_SQLITE = """
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        email    TEXT NOT NULL UNIQUE,
+        phone    TEXT NOT NULL,
+        address  TEXT NOT NULL,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )"""
+
+
+def run_query(sql, params=(), fetch=False):
+    """Run one statement on MySQL or SQLite and return the first row as a dict when fetch=True.
+    Statements use %s placeholders (converted to ? for SQLite)."""
+    if USE_SQLITE:
+        conn = sqlite3.connect(SQLITE_PATH)
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute(sql.replace("%s", "?"), params)
+        row = cur.fetchone() if fetch else None
+        conn.commit()
+        result = dict(row) if row else None
+        conn.close()
+        return result
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute(sql, params)
+    row = cur.fetchone() if fetch else None
     conn.commit()
     cur.close()
     conn.close()
+    return row
+
+
+def init_db():
+    """Create the database (MySQL only, when allowed) and the users table if they do not exist yet."""
+    if USE_SQLITE:
+        run_query(USERS_TABLE_SQLITE)
+        return
+    try:
+        conn = mysql.connector.connect(host=DB_HOST, port=DB_PORT, user=DB_USER, password=DB_PASSWORD)
+        cur = conn.cursor()
+        cur.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4")
+        conn.commit()
+        cur.close()
+        conn.close()
+    except mysql.connector.Error:
+        pass            # hosted MySQL: the database is created in the host's dashboard instead
+    run_query(USERS_TABLE_MYSQL)
+
+
+def seed_demo_user():
+    """Optional ready-made login for a public demo: set DEMO_EMAIL and DEMO_PASSWORD."""
+    email = os.environ.get("DEMO_EMAIL", "").strip().lower()
+    password = os.environ.get("DEMO_PASSWORD", "")
+    if email and password and not run_query("SELECT id FROM users WHERE email = %s", (email,), fetch=True):
+        run_query("INSERT INTO users (username, email, phone, address, password) VALUES (%s, %s, %s, %s, %s)",
+                  ("Demo User", email, "0000000000", "Demo account", generate_password_hash(password)))
 
 
 try:
     init_db()
-except mysql.connector.Error as exc:                      # pragma: no cover
-    raise SystemExit(f"\nCould not connect to MySQL at {DB_HOST}:{DB_PORT} as '{DB_USER}': {exc}\n"
-                     "Start MySQL (e.g. the XAMPP control panel -> MySQL -> Start) and check the DB_* "
+    seed_demo_user()
+except (mysql.connector.Error, sqlite3.Error) as exc:                      # pragma: no cover
+    raise SystemExit(f"\nCould not set up the database ({'SQLite' if USE_SQLITE else f'MySQL at {DB_HOST}:{DB_PORT} as {DB_USER}'}): {exc}\n"
+                     "For MySQL, start it (e.g. XAMPP control panel -> MySQL -> Start) and check the DB_* "
                      "settings, then run again.\n")
 
 
@@ -150,19 +207,13 @@ def registration():
         elif password != confirm:                              # password confirmation
             error = "Passwords do not match."
         if not error:
-            conn = get_db()
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM users WHERE email = %s", (form["email"].lower(),))
-            if cur.fetchone():                                 # does the email already exist?
-                error = "That email is already registered."
+            if run_query("SELECT id FROM users WHERE email = %s", (form["email"].lower(),), fetch=True):
+                error = "That email is already registered."      # does the email already exist?
             else:
-                cur.execute("INSERT INTO users (username, email, phone, address, password) "
-                            "VALUES (%s, %s, %s, %s, %s)",
-                            (form["username"], form["email"].lower(), form["phone"], form["address"],
-                             generate_password_hash(password)))
-                conn.commit()
-            cur.close()
-            conn.close()
+                run_query("INSERT INTO users (username, email, phone, address, password) "
+                          "VALUES (%s, %s, %s, %s, %s)",
+                          (form["username"], form["email"].lower(), form["phone"], form["address"],
+                           generate_password_hash(password)))
         if error:
             flash(error, "danger")
         else:
@@ -176,12 +227,7 @@ def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password", "")
-        conn = get_db()
-        cur = conn.cursor(dictionary=True)
-        cur.execute("SELECT id, username, password FROM users WHERE email = %s", (email,))
-        user = cur.fetchone()
-        cur.close()
-        conn.close()
+        user = run_query("SELECT id, username, password FROM users WHERE email = %s", (email,), fetch=True)
         if user and check_password_hash(user["password"], password):   # compare to stored credentials
             session.clear()
             session["user_id"] = user["id"]
