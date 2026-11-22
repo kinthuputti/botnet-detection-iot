@@ -1,5 +1,5 @@
 # Hybrid ML-Based Botnet Detection System for IoT Networks
-**Live demo:** https://your-app-name.onrender.com
+**Live demo:** https://botnet-detection-iot.onrender.com
 **Demo login:** `demo@botnet-demo.com` / `Demo@12345`
 *(Free hosting: the first load may take about a minute.)*
 
