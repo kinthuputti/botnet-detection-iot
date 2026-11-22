@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Algorithms{% endblock %}
+{% block content %}
+<h4 class="mb-1">Algorithm comparison</h4>
+<p class="text-muted">Pre-tested accuracy of each algorithm on the botnet traffic dataset (5-fold cross-validation).
+  Selecting a model shows its stored performance – nothing is trained when you click.</p>
+
+<div class="row g-3">
+  <div class="col-lg-5"><div class="card p-4 h-100">
+    <h6>Select a model</h6>
+    <form method="post" class="mb-3">
+      <select name="model" class="form-select mb-3" required>
+        <option value="" disabled {% if not selected %}selected{% endif %}>Choose an algorithm…</option>
+        {% for name in models %}<option value="{{ name }}" {% if name == selected %}selected{% endif %}>{{ name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-primary">Show performance</button>
+    </form>
+    {% if selected %}
+    <div class="text-center border rounded p-3">
+      <div class="text-muted small">{{ selected }}{% if selected == best %} · <span class="badge text-bg-success">best</span>{% endif %}</div>
+      <div class="score-big text-primary">{{ score }}%</div><div class="small text-muted">accuracy</div>
+    </div>
+    {% endif %}
+  </div></div>
+
+  <div class="col-lg-7"><div class="card p-4 h-100">
+    <h6>All models</h6>
+    {% for name, acc in models.items() %}
+    <div class="mb-3">
+      <div class="d-flex justify-content-between small"><span>{{ name }}{% if name == best %} ⭐{% endif %}</span><b>{{ acc }}%</b></div>
+      <div class="progress" style="height:14px"><div class="progress-bar {% if name == selected %}bg-primary{% else %}bg-secondary{% endif %}"
+        style="width: {{ acc }}%"></div></div>
+    </div>
+    {% endfor %}
+  </div></div>
+</div>
+{% endblock %}

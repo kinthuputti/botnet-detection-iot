@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}View Data{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h4 class="mb-0">View data</h4>
+  <form method="get" class="d-flex gap-2">
+    <select name="file" class="form-select form-select-sm">
+      <option value="__cleaned__" {% if selected == '__cleaned__' %}selected{% endif %}>cleaned_dataset.csv (built-in)</option>
+      {% for stored, name in files %}<option value="{{ stored }}" {% if selected == stored %}selected{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <button class="btn btn-sm btn-primary">Open</button>
+  </form>
+</div>
+
+{% if not table %}
+  <div class="card p-4">No dataset selected. <a href="{{ url_for('upload') }}">Upload a CSV</a> or open the built-in
+    <a href="{{ url_for('viewdata', file='__cleaned__') }}">cleaned_dataset.csv</a>.</div>
+{% else %}
+  <div class="row g-3 mb-3">
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="score-big">{{ info.rows }}</div>rows</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="score-big">{{ info.cols }}</div>columns</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="score-big">{{ info.missing_before }}</div>missing values</div></div>
+    <div class="col-md-3"><div class="card p-3 text-center"><div class="score-big">{{ info.missing_after }}</div>missing after imputation</div></div>
+  </div>
+
+  <div class="card p-3 mb-3">
+    <h6>{{ title }} – first 50 rows</h6>
+    <div class="table-wrap">{{ table|safe }}</div>
+  </div>
+
+  <div class="card p-3">
+    <h6>After pre-processing <small class="text-muted">(first 20 rows)</small></h6>
+    <ul class="small">
+      <li>Missing values filled with <b>SimpleImputer</b> (median for numbers, most-frequent for text){% if missing %}:
+        {% for c, n in missing.items() %}<code>{{ c }}</code> ({{ n }}){% if not loop.last %}, {% endif %}{% endfor %}{% endif %}.</li>
+      {% if info.encoded %}<li>Categorical columns converted with <b>LabelEncoder</b>:
+        {% for c, m in info.encoded.items() %}<code>{{ c }}</code>{% if m|length <= 6 %} {{ m }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}.</li>{% endif %}
+      {% if info.dropped_empty %}<li>Dropped empty columns: {{ info.dropped_empty|join(', ') }}.</li>{% endif %}
+      {% if labels %}<li>Label distribution: {% for k, v in labels.items() %}<b>{{ k }}</b> = {{ v }}{% if not loop.last %}, {% endif %}{% endfor %}.</li>{% endif %}
+    </ul>
+    <div class="table-wrap">{{ clean_table|safe }}</div>
+  </div>
+{% endif %}
+{% endblock %}

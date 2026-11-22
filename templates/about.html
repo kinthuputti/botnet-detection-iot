@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card p-4 h-100">
+    <h4>About the project</h4>
+    <p>IoT networks connect billions of home, industrial and infrastructure devices. Many are resource-constrained and
+      lightly secured, which makes them easy to enrol in <b>botnets</b> controlled by a command-and-control (C&amp;C) server
+      for DDoS attacks, data theft and network disruption.</p>
+    <h6 class="mt-2">Why existing systems fall short</h6>
+    <ul class="small">
+      <li>Signature-based IDS (e.g. Snort, Suricata) miss new or polymorphic botnet variants.</li>
+      <li>Rule-based anomaly detection is static, needs manual updates and struggles with IoT diversity.</li>
+      <li>High false positives/negatives, scalability limits and little temporal analysis (e.g. periodic C&amp;C beacons).</li>
+    </ul>
+    <h6>What this system adds</h6>
+    <ul class="small mb-0">
+      <li>Machine-learning classification of network flows into Benign or Malicious.</li>
+      <li>Models that can be retrained on new data to follow evolving threats.</li>
+      <li>A web interface to upload data, compare algorithms, score flows and read mitigation advice.</li>
+    </ul>
+  </div></div>
+  <div class="col-lg-5"><div class="card p-4 h-100">
+    <h4>System modules</h4>
+    <ol class="mb-0">
+      <li><b>Authentication</b> – registration and login (MySQL)</li>
+      <li><b>File management</b> – CSV upload and storage</li>
+      <li><b>Data processing</b> – imputation, label encoding, train/test split, k-fold</li>
+      <li><b>Model selection</b> – compare pre-tested algorithms</li>
+      <li><b>Prediction</b> – single-flow scoring from 17 numeric inputs</li>
+      <li><b>Presentation</b> – Bootstrap templates and styled tables</li>
+    </ol>
+  </div></div>
+</div>
+{% endblock %}

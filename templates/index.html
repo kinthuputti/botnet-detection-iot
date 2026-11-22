@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero mb-4">
+  <h1 class="display-5 fw-bold">Hybrid ML-Based Botnet Detection for IoT Networks</h1>
+  <p class="lead mb-4">Botnets hijack poorly protected IoT devices to launch DDoS attacks, steal data and disrupt
+    networks. This system analyses network-flow features with machine learning to classify traffic as
+    <b>Benign</b> or <b>Malicious</b> and suggests how to respond.</p>
+  {% if session.user_id %}
+    <a class="btn btn-light btn-lg me-2" href="{{ url_for('upload') }}">Upload data</a>
+    <a class="btn btn-outline-light btn-lg" href="{{ url_for('prediction') }}">Try a prediction</a>
+  {% else %}
+    <a class="btn btn-light btn-lg me-2" href="{{ url_for('registration') }}">Create an account</a>
+    <a class="btn btn-outline-light btn-lg" href="{{ url_for('login') }}">Login</a>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="icon-circle">🔐</div>
+    <h6>Secure access</h6><p class="small text-muted mb-0">Registration and login backed by a MySQL users table.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="icon-circle">📂</div>
+    <h6>Upload &amp; explore</h6><p class="small text-muted mb-0">Upload CSV traffic data, preview it and see how it is cleaned and encoded.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="icon-circle">📊</div>
+    <h6>Compare algorithms</h6><p class="small text-muted mb-0">Logistic Regression, Naive Bayes, KNN, Random Forest and Gradient Boosting.</p></div></div>
+  <div class="col-md-3"><div class="card h-100 p-3"><div class="icon-circle">🚨</div>
+    <h6>Predict &amp; respond</h6><p class="small text-muted mb-0">Enter seventeen flow features and get Benign / Malicious with advice.</p></div></div>
+</div>
+{% endblock %}

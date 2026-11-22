@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Prediction{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8"><div class="card p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+      <h4 class="mb-0">Predict a network flow</h4>
+      <div>
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="fillForm(BENIGN)">Fill benign sample</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="fillForm(BOTNET)">Fill botnet sample</button>
+      </div>
+    </div>
+    <p class="text-muted small">Enter the seventeen numeric flow features. They are assembled into a feature vector and scored by a
+      Logistic Regression model trained on <code>cleaned_dataset.csv</code>.</p>
+    <form method="post">
+      <div class="row g-2">
+        {% for name, label, hint in info %}
+        <div class="col-md-4 col-6">
+          <div class="feat-label">{{ loop.index }}. {{ label }}</div>
+          {% if name == 'protocol' %}
+          <select class="form-select form-select-sm" name="protocol" id="protocol">
+            <option value="0" {% if values.protocol == 0 %}selected{% endif %}>0 – ICMP</option>
+            <option value="1" {% if values.protocol == 1 %}selected{% endif %}>1 – TCP</option>
+            <option value="2" {% if values.protocol == 2 %}selected{% endif %}>2 – UDP</option>
+          </select>
+          {% else %}
+          <input class="form-control form-control-sm" type="number" step="any" min="0" name="{{ name }}" id="{{ name }}"
+                 value="{{ shown[name] }}" required>
+          {% endif %}
+          <div class="feat-hint">{{ hint }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <button class="btn btn-primary mt-3 px-4">Predict</button>
+    </form>
+  </div></div>
+
+  <div class="col-lg-4">
+    {% if result %}
+    <div class="card p-4 result-{{ result.label|lower }}">
+      <div class="text-muted small">Prediction</div>
+      <div class="score-big {% if result.label == 'Malicious' %}text-danger{% else %}text-success{% endif %}">{{ result.label }}</div>
+      <div class="small text-muted mt-1 mb-3">Botnet probability: <b>{{ result.probability }}%</b></div>
+      <h6>{% if result.label == 'Malicious' %}⚠️ Recommended actions{% else %}✅ Assessment{% endif %}</h6>
+      <ul class="small mb-0">{% for a in result.advice %}<li class="mb-1">{{ a }}</li>{% endfor %}</ul>
+    </div>
+    {% else %}
+    <div class="card p-4 text-muted">Fill in the form (or load a sample) and press <b>Predict</b> to classify the flow as
+      <b>Benign</b> or <b>Malicious</b>.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const BENIGN = {{ sample_benign|tojson }}, BOTNET = {{ sample_botnet|tojson }};
+function fillForm(o){ for (const k in o){ const el = document.getElementById(k); if (el) el.value = o[k]; } }
+</script>
+{% endblock %}
