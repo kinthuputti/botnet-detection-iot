@@ -1,4 +1,7 @@
 # Hybrid ML-Based Botnet Detection System for IoT Networks
+**Live demo:** https://your-app-name.onrender.com
+**Demo login:** `demo@botnet-demo.com` / `Demo@12345`
+*(Free hosting: the first load may take about a minute.)*
 
 A Flask + MySQL web application that classifies IoT network flows as **Benign** or **Malicious** and suggests how to respond.
 
